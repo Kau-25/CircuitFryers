@@ -1,29 +1,40 @@
-#include <Adafruit_LSM6DSOX.h>
+#include <Wire.h>
+#include <MPU6050.h>
 
-Adafruit_LSM6DSOX sox;
-void setup(void) {
+MPU6050 mpu;
+
+void setup() {
   Serial.begin(115200);
-  if (!sox.begin_I2C()){
-    Serial.println("Failed to initialize LSM6DSOX in I2C mode!");
+  Wire.begin();
+
+  Serial.println("Initializing MPU...");
+  mpu.initialize();
+
+  // Check if connected
+  if (!mpu.testConnection()) {
+    Serial.println("MPU connection failed!");
     while (1);
   }
-  Serial.println("I2C Mode initialized!");
 
+  Serial.println("MPU successfully connected!");
 }
 
-void loop(){
-  sensors_event_t accel, gyro, temp;
-  sox.getEvent(&accel, &gyro, &temp);
-  // Print out the readings
-  Serial.print("Accel X: "); Serial.print(accel.acceleration.x); Serial.print(" m/s^2\t");
-  Serial.print("Y: "); Serial.print(accel.acceleration.y); Serial.print(" m/s^2\t");
-  Serial.print("Z: "); Serial.print(accel.acceleration.z); Serial.println(" m/s^2");
+void loop() {
+  int16_t ax, ay, az;
+  int16_t gx, gy, gz;
 
-  Serial.print("Gyro X: "); Serial.print(gyro.gyro.x); Serial.print(" rad/s\t");
-  Serial.print("Y: "); Serial.print(gyro.gyro.y); Serial.print(" rad/s\t");
-  Serial.print("Z: "); Serial.print(gyro.gyro.z); Serial.println(" rad/s");
+  // Get raw acceleration and gyro values
+  mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
+  // Convert to proper units if needed (raw values now)
+  Serial.print("Accel (raw) X: "); Serial.print(ax);
+  Serial.print(" Y: "); Serial.print(ay);
+  Serial.print(" Z: "); Serial.println(az);
+
+  Serial.print("Gyro (raw) X: "); Serial.print(gx);
+  Serial.print(" Y: "); Serial.print(gy);
+  Serial.print(" Z: "); Serial.println(gz);
 
   Serial.println();
-  delay(500);  // Delay between readings
+  delay(500);
 }
-
